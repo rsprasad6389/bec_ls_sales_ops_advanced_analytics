@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 import os
-# import ollama
+
 from langchain.prompts import PromptTemplate
 from langchain.tools import tool
 from langchain.agents import Tool
 
 from langchain.chains import LLMChain
-# from langchain_ollama import ChatOllama
+
 from langchain.callbacks import StreamlitCallbackHandler
 from langchain_openai import AzureChatOpenAI
 import snowflake.connector as sf
@@ -40,9 +40,8 @@ llm = AzureChatOpenAI(
 
 
 # Create a LangChain LLM using the Hugging Face pipeline
-os.environ['SSL_CERT_FILE'] = 'C:\\Users\\RSPRASAD\\AppData\\Local\\.certifi\\cacert.pem'
-# GROQ_API_KEY = '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'
-# llm = ChatOllama(model = 'codellama', temperature = 0)
+
+
 
 
 
