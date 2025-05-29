@@ -69,7 +69,8 @@ def KFT_tool(query: str) -> str:
     
     prompt_template = """
         You are an expert in writing Python code and executing it.
-        ***Just answer the exact question asked by user and entirely forget about earlier question asked by user.***
+        # ***Just answer the exact question asked by user and entirely forget about earlier question asked by user.***
+      ***Please answer only the current question asked by the user, without referencing previous questions. Follow the conditions provided in the current user input.***
         Question is :"{question}".
         I have the following CSV data with the columns: "{columns}". 
         Data is in a dataframe called 'df' already.
