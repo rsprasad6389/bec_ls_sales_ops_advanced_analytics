@@ -12,7 +12,7 @@ from langchain.callbacks import StreamlitCallbackHandler
 from langchain_openai import AzureChatOpenAI
 
 
-# from snowflake.snowpark import Session
+
 from langchain.agents import initialize_agent,AgentType
 
 if 'df' not in st.session_state:
