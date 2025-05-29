@@ -10,7 +10,7 @@ from langchain.chains import LLMChain
 
 from langchain.callbacks import StreamlitCallbackHandler
 from langchain_openai import AzureChatOpenAI
-import snowflake.connector as sf
+
 
 # from snowflake.snowpark import Session
 from langchain.agents import initialize_agent,AgentType
