@@ -1,12 +1,12 @@
-name: Build and Deploy Streamlit App to Azure Web App
+name: Build and Deploy Streamlit App to Azure
 
 env:
-  AZURE_WEBAPP_NAME: pspgpt           # Replace with your Azure Web App name
-  PYTHON_VERSION: '3.9'               # Python version
+  AZURE_WEBAPP_NAME: pspgpt
+  PYTHON_VERSION: '3.9'
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -25,14 +25,19 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Create virtual environment and install dependencies
+      - name: Create venv and install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
+          which python
+          python -m pip show streamlit  # ✅ Check streamlit is really installed
 
-      - name: Zip application including virtual environment
+      - name: List venv contents (debug)
+        run: ls -R antenv
+
+      - name: Zip code and virtualenv
         run: |
           zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
 
