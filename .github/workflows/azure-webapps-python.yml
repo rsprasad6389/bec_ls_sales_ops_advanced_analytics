@@ -1,4 +1,4 @@
-name: Deploy Streamlit to Azure Web App (no venv)
+name: Deploy Streamlit to Azure Web App (Azure handles venv)
 
 env:
   AZURE_WEBAPP_NAME: pspgpt
@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: ✅ Checkout code
         uses: actions/checkout@v4
+
+      - name: 🧽 Remove any venv (ensure clean deploy)
+        run: |
+          rm -rf antenv
 
       - name: 🧪 List files for debug
         run: ls -R
