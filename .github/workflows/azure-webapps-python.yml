@@ -1,8 +1,8 @@
-name: Build and Deploy Streamlit App to Azure
+name: Build and Deploy Streamlit App to Azure Web App
 
 env:
-  AZURE_WEBAPP_NAME: pspgpt
-  PYTHON_VERSION: '3.9'
+  AZURE_WEBAPP_NAME: pspgpt           # Replace with your Azure Web App name
+  PYTHON_VERSION: '3.9'               # Python version
 
 on:
   push:
@@ -32,9 +32,9 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Zip application with virtual environment
+      - name: Zip application including virtual environment
         run: |
-          zip -r app.zip . -x ".git/*" ".github/*" "*.zip"
+          zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
