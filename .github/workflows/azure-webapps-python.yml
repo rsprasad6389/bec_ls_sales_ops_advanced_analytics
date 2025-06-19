@@ -68,6 +68,10 @@ jobs:
           path: |
             .
             !venv/
+      - name: Install dependencies into local folder
+        run: |
+          mkdir -p ./python_packages
+          pip install -r requirements.txt -t ./python_packages
 
   deploy:
     permissions:
@@ -85,12 +89,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
+    
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # - name: Zip app for deployment
+      #   run: zip -r app.zip . -x "venv/*" ".git/*" "*.zip"
+
       - name: Zip app for deployment
-        run: zip -r app.zip . -x "venv/*" ".git/*" "*.zip"
+        run: zip -r app.zip . -x ".git/*" "*.zip" "venv/*"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
