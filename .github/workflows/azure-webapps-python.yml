@@ -33,7 +33,10 @@ jobs:
           pip install -r requirements.txt
           which python
           python -m pip show streamlit  # ✅ Check streamlit is really installed
-
+          cp -r antenv/lib64 antenv/lib  # 🔧 Copy lib64 to lib so Azure finds packages
+          which python
+          echo "✅ Streamlit folder (lib):"
+          find antenv/lib -type d -name streamlit
       - name: List venv contents (debug)
         run: ls -R antenv
 
