@@ -17,31 +17,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📦 Checkout code
+      - name: 🧾 Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 📂 Install dependencies
+      - name: 📦 Create venv & install dependencies in lib
         run: |
+          python -m venv antenv
+          source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip show streamlit
 
-      - name: 📁 Zip app (no venv)
+          # Ensure both lib and lib64 exist
+          mkdir -p antenv/lib/python3.9/site-packages
+          mkdir -p antenv/lib64/python3.9
+
+          # Create a symlink from lib64 to lib (instead of copying)
+          ln -sfn antenv/lib/python3.9/site-packages antenv/lib64/python3.9/site-packages
+
+      - name: 🧪 Debug - Check Streamlit exists in lib and lib64
         run: |
-          zip -r app.zip . -x "*.git*" "*.github*" "antenv/*" "*.zip"
+          echo "🔍 lib:"
+          ls antenv/lib/python3.9/site-packages/streamlit || echo "❌ Not found in lib"
 
-      - name: ✅ Verify Streamlit in code
-        run: unzip -l app.zip | grep streamlit || echo "Streamlit not found in zip"
+          echo "🔍 lib64:"
+          ls antenv/lib64/python3.9/site-packages/streamlit || echo "❌ Not found in lib64"
+
+      - name: 📦 Zip code & environment
+        run: |
+          zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
+
+      - name: 🧾 Debug: Verify Streamlit in ZIP
+        run: unzip -l app.zip | grep streamlit
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: pspgpt
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: app.zip
-          startup-command: python -m streamlit run PSP_GPT_v5.py --server.port=8000 --server.enableCORS=false
