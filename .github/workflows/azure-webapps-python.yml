@@ -1,4 +1,4 @@
-name: Deploy Streamlit to Azure Web App (Azure handles venv)
+name: Build and Deploy Streamlit App to Azure
 
 env:
   AZURE_WEBAPP_NAME: pspgpt
@@ -17,19 +17,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ✅ Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🧽 Remove any venv (ensure clean deploy)
+      - name: Debug - Show requirements.txt
+        run: cat requirements.txt
+
+      - name: Zip ONLY app code, NO venv
         run: |
-          rm -rf antenv
+          zip -r app.zip . -x "antenv/*" "*.git*" "*.github*" "*.zip"
 
-      - name: 🧪 List files for debug
-        run: ls -R
-
-      - name: 🚀 Deploy to Azure Web App
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: pspgpt
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: app.zip
