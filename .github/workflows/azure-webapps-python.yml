@@ -27,6 +27,9 @@ jobs:
         run: |
           zip -r app.zip . -x "antenv/*" "*.git*" "*.github*" "*.zip"
 
+      - name: Debug Show zip content
+        run: unzip -l app.zip
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
