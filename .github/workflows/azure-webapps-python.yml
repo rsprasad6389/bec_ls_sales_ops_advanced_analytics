@@ -17,37 +17,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🧾 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Create venv and install dependencies
+      - name: 📦 Create venv & install dependencies in lib and copy to lib64
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          which python
-          # python -m pip show streamlit  # ✅ Check streamlit is really installed
-          cp -r antenv/lib64 antenv/lib  # 🔧 Copy lib64 to lib so Azure finds packages
-          which python
-          echo "✅ Streamlit folder (lib):"
-          find antenv/lib -type d -name streamlit
-      - name: List venv contents (debug)
-        run: ls -R antenv
 
-      - name: Zip code and virtualenv
+          # Ensure both lib and lib64 exist
+          mkdir -p antenv/lib/python3.9/site-packages
+          mkdir -p antenv/lib64/python3.9
+
+          # Copy all installed packages to lib64
+          cp -r antenv/lib/python3.9/site-packages antenv/lib64/python3.9/
+
+      - name: Check Streamlit exists in lib and lib64
+        run: |
+          echo "🔍 lib:"
+          ls antenv/lib/python3.9/site-packages/streamlit || echo "❌ Not found"
+
+          echo "🔍 lib64:"
+          ls antenv/lib64/python3.9/site-packages/streamlit || echo "❌ Not found"
+
+      - name: 📦 Zip code & environment
         run: |
           zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
 
-      # - name: Verify streamlit in zip
+      # - name: 🧾 Debug: Verify Streamlit in ZIP
       #   run: unzip -l app.zip | grep streamlit
 
-      - name: Deploy to Azure Web App
+      - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: pspgpt
