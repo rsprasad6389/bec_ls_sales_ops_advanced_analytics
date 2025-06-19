@@ -41,6 +41,9 @@ jobs:
         run: |
           zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
 
+      - name: Verify streamlit in zip
+        run: unzip -l app.zip | grep streamlit
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
