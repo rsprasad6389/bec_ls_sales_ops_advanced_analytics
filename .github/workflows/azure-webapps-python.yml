@@ -36,8 +36,9 @@ jobs:
           mkdir -p antenv/lib/python3.9/site-packages
           mkdir -p antenv/lib64/python3.9
 
-          # Copy all installed packages to lib64
-          cp -r antenv/lib/python3.9/site-packages antenv/lib64/python3.9/
+          # Create a symlink from lib64 to lib (instead of copying)
+          ln -sfn antenv/lib/python3.9/site-packages antenv/lib64/python3.9/site-packages
+
 
       - name: Check Streamlit exists in lib and lib64
         run: |
