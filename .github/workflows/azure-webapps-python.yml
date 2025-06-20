@@ -44,7 +44,7 @@ jobs:
 
       - name: 📦 Zip app and environment
         run: |
-           zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"  "antenv/*"
+           zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"  
 
       - name: 🧾 Debug - List contents of app.zip
         run: unzip -l app.zip
