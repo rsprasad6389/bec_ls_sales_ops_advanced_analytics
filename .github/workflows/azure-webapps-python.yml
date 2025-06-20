@@ -25,7 +25,7 @@ jobs:
 
       - name: Zip ONLY app code, NO venv
         run: |
-          zip -r app.zip . -x "antenv/*" "*.git*" "*.github*" "*.zip"
+          zip -r app.zip . -x  "*.git*" "*.github*" "*.zip"
 
       - name: Debug Show zip content
         run: unzip -l app.zip
