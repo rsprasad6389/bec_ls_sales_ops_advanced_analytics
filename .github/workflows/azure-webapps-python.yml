@@ -48,7 +48,8 @@ jobs:
 
       - name: 📦 Zip app and venv (excluding unnecessary files)
         run: |
-          zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"
+          # zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"
+          zip -r app.zip . .skipOryxBuild -x "*.git*" "*.github*" "*.zip" "__pycache__/*"
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
