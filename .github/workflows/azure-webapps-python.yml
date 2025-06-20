@@ -25,28 +25,29 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 📦 Create venv & install dependencies in lib
+      - name: 📦 Create virtual environment and install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          # Ensure both lib and lib64 exist
           mkdir -p antenv/lib/python3.9/site-packages
           mkdir -p antenv/lib64/python3.9
-          # Create a symlink from lib64 to lib (instead of copying)
           ln -sfn antenv/lib/python3.9/site-packages antenv/lib64/python3.9/site-packages
-      - name: 🧪 Debug - Check Streamlit exists in lib and lib64
+
+      - name: ❌ Disable Oryx
+        run: touch .skipOryxBuild
+
+      - name: 🧪 Debug - Check Streamlit exists
         run: |
-          echo "🔍 lib:"
-          ls antenv/lib/python3.9/site-packages/streamlit || echo "❌ Not found in lib"
-          echo "🔍 lib64:"
-          ls antenv/lib64/python3.9/site-packages/streamlit || echo "❌ Not found in lib64"
-      - name: 📦 Zip code & environment
+          ls antenv/lib/python3.9/site-packages/streamlit || echo "❌ Streamlit not found"
+
+      - name: 📦 Zip app and environment
         run: |
-          zip -r app.zip . -x "*.git*" "*.github*" "*.zip"
-      - name: 🧾 Debug - Verify Streamlit in ZIP
-        run: unzip -l app.zip | grep streamlit
+          zip -r app.zip antenv/ *.py requirements.txt .streamlit/ -x "*.git*" "*.github*" "*.zip"
+
+      - name: 🧾 Debug - List contents of app.zip
+        run: unzip -l app.zip
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
