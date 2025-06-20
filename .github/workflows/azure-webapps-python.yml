@@ -31,27 +31,28 @@ jobs:
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
+          # Ensure lib64 links to lib
           mkdir -p antenv/lib/python3.9/site-packages
           mkdir -p antenv/lib64/python3.9
           ln -sfn antenv/lib/python3.9/site-packages antenv/lib64/python3.9/site-packages
 
-      - name: ❌ Disable Oryx
+      - name: ❌ Disable Oryx build
         run: touch .skipOryxBuild
 
-      - name: 🧪 Debug - Check Streamlit exists
+      - name: 📝 Create startup.sh for Azure to launch app
         run: |
-          ls antenv/lib/python3.9/site-packages/streamlit || echo "❌ Streamlit not found"
+          echo '#!/bin/bash' > startup.sh
+          echo 'source antenv/bin/activate' >> startup.sh
+          echo 'exec python -m streamlit run PSP_GPT_v5.py --server.port=$PORT --server.enableCORS=false' >> startup.sh
+          chmod +x startup.sh
 
-      - name: 📦 Zip app and environment
+      - name: 📦 Zip app and venv (excluding unnecessary files)
         run: |
-           zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"  
-
-      - name: 🧾 Debug - List contents of app.zip
-        run: unzip -l app.zip
+          zip -r app.zip . -x "*.git*" "*.github*" "*.zip" "__pycache__/*"
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: pspgpt
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: app.zip
