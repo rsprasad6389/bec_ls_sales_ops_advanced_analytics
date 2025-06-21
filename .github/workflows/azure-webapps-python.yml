@@ -2,7 +2,7 @@ name: Build and Deploy Streamlit App to Azure
 
 env:
   AZURE_WEBAPP_NAME: pspgpt
-  PYTHON_VERSION: '3.9'
+  PYTHON_VERSION: '3.13'
 
 on:
   push:
