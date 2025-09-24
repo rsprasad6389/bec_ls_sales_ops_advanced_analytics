@@ -23,8 +23,7 @@ flag_column = 0
 user_specific_value = 0
 df = ''
 
-api_key = os.getenv("AZURE_CHATOPEN_API_NEW")
-azure_endpoint = os.getenv("AZURE_ENDPOINT")
+
 
 
 # from snowflake.snowpark import Session
@@ -692,9 +691,12 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
     # tools=[filter_tool,KFT_finding_tool]
     tools = [KFT_tool]
 
+    api_key = os.getenv("AZURE_CHATOPEN_API_NEW")
+    azure_endpoint = os.getenv("AZURE_ENDPOINT")
+
     llm = AzureChatOpenAI(
-                                    api_key = "5rBPLfBwcuV3QIiQ3UK0mima2DOOxZiX5HfR4RIYCB7sOBH2EfEAJQQJ99BIACi0881XJ3w3AAABACOGiBE0",
-                                    azure_endpoint = "https://becopenaidev4.openai.azure.com/",
+                                    api_key =  api_key ,
+                                    azure_endpoint = azure_endpoint ,
                                     model = "gpt-4o",
                                     api_version="2024-02-01",
                                     temperature = 0.
@@ -722,3 +724,4 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
