@@ -16,8 +16,11 @@ from datetime import datetime
 from typing import Tuple
 from openai import OpenAI  # or AzureOpenAI, or use LangChain LLM interface
 import pandas as pd
-
+import snowflake.connector as sf
 from langchain.agents import AgentExecutor
+
+from snowflake.snowpark import Session
+
 
 flag_column = 0
 user_specific_value = 0
@@ -724,4 +727,5 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
