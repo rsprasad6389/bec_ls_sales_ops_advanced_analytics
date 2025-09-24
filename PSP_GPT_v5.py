@@ -69,9 +69,9 @@ def connect_to_snowflake(account, user):
 cs = ''
 if 'cs' not in st.session_state:
      
-    user = "BEC_LS_SALES_OPS_DWH_DEV"
-    account="BECKMAN_COULTER_US_WEST"
-    password ="BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24"
+    user = os.getenv("SNOWFLAKE_USER")
+    account= os.getenv("SNOWFLAKE_ACCOUNT")
+    password = os.getenv("SNOWFLAKE_PASSWORD")
     warehouse = "BEC_LS_SALES_OPS_DWH"
     database ="BEC_LS_SALES_OPS_DWH_DEV"
     schema = "SFDC"
@@ -727,5 +727,6 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
 
