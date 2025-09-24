@@ -45,6 +45,9 @@ jobs:
           echo 'source antenv/bin/activate' >> startup.sh
           echo 'exec python -m streamlit run PSP_GPT_v5.py --server.port=$PORT --server.enableCORS=false' >> startup.sh
           chmod +x startup.sh
+          env:
+          AZURE_ENDPOINT: ${{ secrets.AZURE_ENDPOINT }}
+          AZURE_CHATOPEN_API_NEW: ${{ secrets.AZURE_CHATOPEN_API_NEW }}
 
       - name: 🧹 Clean up unneeded files in venv
         run: |
