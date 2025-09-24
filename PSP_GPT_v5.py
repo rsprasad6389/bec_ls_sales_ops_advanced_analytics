@@ -21,14 +21,63 @@ from langchain.agents import AgentExecutor
 
 flag_column = 0
 user_specific_value = 0
+df = ''
+
+api_key = os.getenv("AZURE_CHATOPEN_API_NEW")
+azure_endpoint = os.getenv("AZURE_ENDPOINT")
+
+
 # from snowflake.snowpark import Session
-from langchain.agents import initialize_agent,AgentType
 
-if 'df' not in st.session_state:
-    st.session_state['df'] = ''
 
+# if 'df' not in st.session_state:
+#     st.session_state['df'] = ''
+
+
+
+def snowpark_sso_connection():
+    connection_parameters = {    
+        "ACCOUNT": "BECKMAN_COULTER_US_WEST",
+#         "USER": "rsprasad@beckman.com",
+        "USER":"BEC_LS_SALES_OPS_DWH_DEV",
+        "PASSWORD" : "BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24",
+       
+        "WAREHOUSE" : "BEC_LS_SALES_OPS_DWH",
+        "DATABASE" :"BEC_LS_SALES_OPS_DWH_DEV",
+        "SCHEMA" :"SFDC"
+        
+        
+    }
+    session = Session.builder.configs(connection_parameters).create()
+    return session
+session = snowpark_sso_connection()
+
+
+def connect_to_snowflake(account, user):
+
+
+    global ctx_dw
+    ctx_dw = sf.connect(user = user,account = account, \
+                        password = password, warehouse = warehouse, database = database, schema = schema
+#                      authenticator = 'externalbrowser'
+                      )   
+    cs = ctx_dw.cursor()
+    cs.execute('USE DATABASE BEC_LS_SALES_OPS_DWH_DEV;')
+    return cs
+cs = ''
 if 'cs' not in st.session_state:
-    st.session_state['cs'] =''
+     
+    user = "BEC_LS_SALES_OPS_DWH_DEV"
+    account="BECKMAN_COULTER_US_WEST"
+    password ="BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24"
+    warehouse = "BEC_LS_SALES_OPS_DWH"
+    database ="BEC_LS_SALES_OPS_DWH_DEV"
+    schema = "SFDC"
+                            
+                        
+    cs = connect_to_snowflake(account, user)
+
+    st.session_state['cs'] =cs
 
 if 'session' not in st.session_state:
     st.session_state['session'] =''
@@ -36,40 +85,119 @@ if 'session' not in st.session_state:
 
 
 list_matching_cols = []
-st.set_page_config(page_title="PSP AI Agent", layout="wide")
+st.set_page_config(page_title="PSP AI Agent", layout="centered")
 result = ''
 
-llm = AzureChatOpenAI(
-    api_key = "082d3990364b4fadbc133fa8935b7905",
-                        azure_endpoint = "https://becopenaidev7.openai.azure.com/",
-                        model = "gpt-4o",
-                        api_version="2024-02-01",
-                        temperature = 0.
-    # other params...
-)
 
+
+#change username here
+
+# user = 'rsprasad@beckman.com' 
+
+
+
+# #change username here
+
+if 'input_month' not in st.session_state:
+    query= '''SELECT * FROM SFDC.FISCAL_CALENDAR_V2;'''
+    cs = st.session_state['cs']
+    results = cs.execute(query)
+    results = cs.fetch_pandas_all()
+    df = pd.DataFrame(results)
+    current_date = pd.to_datetime(datetime.now().date())
+    df["Month End"] = pd.to_datetime(df["Month End"])
+
+    for i in range(len(df) - 1):
+        if df.loc[i, "Month End"] > current_date >= df.loc[i+1, "Month End"]:
+            st.session_state['input_month'] = df.loc[i+1, "Month End"].month
+            
+
+# If current_date >= last Month End → pick last row
+     
+    # st.write('Input month based on new logic is..', st.session_state['input_month'])        
+
+
+
+
+if 'df_actual' not in st.session_state:
+    query= '''SELECT  "Historical Date", "Product Models", "Product Groups","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4","Product Line Code","OBI Group", "OBI Sub Group", "Secondary Sub-Group", "Grouped Lead Source", "Lead Source", SUM("Amount (converted)") "Amount", YEAR("Historical Date") "Year", "Oppt_Type", "KPI" FROM SFDC."Master_Table_SFDC_With_KPIs" WHERE "KPI" = 'Funnel Fill Rate' AND YEAR("Historical Date") IN (2025) 
+AND "Product Type (cleaned)" = 'Hardware' and "Grouped Lead Source" IS NOT NULL and "Lead Source" is not null and "2024 Legal Entity 4" is not null
+and "Secondary Sub-Group" is not null and "Secondary Sub-Group" not like '%known' and "Secondary Sub-Group" != 'unknown' and "OBI Group" is not null and "Oppt_Type" IS NULL GROUP BY 
+"Historical Date","Product Models", "Product Groups","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4","Product Line Code", "OBI Group", "OBI Sub Group", "Secondary Sub-Group",  "Grouped Lead Source", "Lead Source",  "Year", "Oppt_Type", "KPI"  ORDER BY "Historical Date","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4", "Product Line Code", "OBI Group", "OBI Sub Group", "Secondary Sub-Group","Grouped Lead Source",  "Year", "Oppt_Type", "KPI"
+;'''
+    cs = st.session_state['cs']
+    results = cs.execute(query)
+    results = cs.fetch_pandas_all()
+    df_actual = pd.DataFrame(results)
+    # st.write(df_actual.head())
+    df_actual['Historical Date'] = pd.to_datetime(df_actual['Historical Date'])
+    df_actual =  df_actual[df_actual['Historical Date'].dt.year==2025].reset_index(drop = True)
+    df_actual =df_actual[df_actual['Historical Date'].dt.month <= (st.session_state['input_month'])].reset_index(drop = True)
+    # st.write('max month is ...')
+    # st.write(max(df_actual['Historical Date'].dt.month))
+    st.session_state['df_actual'] = df_actual.copy(deep = True)
+
+if 'df_plan' not in st.session_state:
+    query2= '''SELECT "Historical Date", "Product Models", "Product Groups","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4","Product Line Code","OBI Group", "OBI Sub Group", "Secondary Sub-Group", "Grouped Lead Source", "Lead Source", SUM("Plan_Data") "Plan", YEAR("Historical Date") "Year", "Oppt_Type", "KPI" FROM SFDC."Master_Table_SFDC_With_KPIs" WHERE "KPI" = 'Funnel Fill Rate' AND YEAR("Historical Date") IN (2025) 
+AND "Product Type (cleaned)" = 'Hardware' and "Grouped Lead Source" IS NOT NULL and "Lead Source" is not null and "2024 Legal Entity 4" is not null
+and "Secondary Sub-Group" is not null and "Secondary Sub-Group" not like '%known' and "Secondary Sub-Group" != 'unknown' and "OBI Group" is not null and "Oppt_Type" ='Dummy_Data_for_FFR' GROUP BY 
+"Historical Date","Product Models", "Product Groups","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4","Product Line Code", "OBI Group", "OBI Sub Group", "Secondary Sub-Group",  "Grouped Lead Source", "Lead Source",  "Year", "Oppt_Type", "KPI"  ORDER BY "Historical Date","2024 Legal Entity 1", "2024 Legal Entity 2", "2024 Legal Entity 3", "2024 Legal Entity 4", "Product Line Code", "OBI Group", "OBI Sub Group", "Secondary Sub-Group","Grouped Lead Source",  "Year", "Oppt_Type", "KPI"
+;'''
+    cs =st.session_state['cs']
+    results = cs.execute(query2)
+    results = cs.fetch_pandas_all()
+    df_plan = pd.DataFrame(results)
+
+    
+    df_plan['Historical Date'] = pd.to_datetime(df_plan['Historical Date'])
+    df_plan = df_plan[df_plan['Historical Date'].dt.year==2025].reset_index(drop = True)
+    df_plan =df_plan[df_plan['Historical Date'].dt.month <= (st.session_state['input_month'])].reset_index(drop = True)
+    st.session_state['df_plan'] = df_plan.copy(deep = True)
+
+
+if 'df' not in st.session_state:
+
+    df = pd.merge(st.session_state['df_actual'],st.session_state['df_plan'], how = 'outer')
+    df['Amount'] = df['Amount'].fillna(0)
+    df['Plan'] = df['Plan'].fillna(0)
+    df['Gap']=df['Plan']-df['Amount']   
+    df=df.rename(columns = {'Amount':'Amount (converted)', 'Year':'YEAR'})
+    df.rename(columns={'2024 Legal Entity 4': 'Country'}, inplace=True)
+    # df.to_excel('Gap4.xlsx')
+    # st.write('Original gap is..', df['Gap'].sum())
+    st.session_state['df'] = df.copy(deep = True) 
+    
+
+# df = pd.read_excel('Gap4.xlsx')
+
+    llm = AzureChatOpenAI(
+                                    api_key = api_key,
+                                    azure_endpoint = azure_endpoint,
+                                    model = "gpt-4o",
+                                    api_version="2024-02-01",
+                                    temperature = 0.
+                                    )
 
 
 # Create a LangChain LLM using the Hugging Face pipeline
-os.environ['SSL_CERT_FILE'] = 'C:\\Users\\RSPRASAD\\AppData\\Local\\.certifi\\cacert.pem'
-# GROQ_API_KEY = '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'
-# llm = ChatOllama(model = 'codellama', temperature = 0)
+# os.environ['SSL_CERT_FILE'] = 'C:\\Users\\RSPRASAD\\AppData\\Local\\.certifi\\cacert.pem'
 
 
 
-df = pd.read_excel('Gap2.xlsx', sheet_name = 'Gap2')
 
-df.rename(columns={'2024 Legal Entity 4': 'Country'}, inplace=True)
+df = st.session_state['df'].copy(deep = True)
+df['Historical Date'] = pd.to_datetime(df['Historical Date'])
+# Display the first few rows of the dataset
+
+# df = df[df['Historical Date'].dt.month<=7]
 
 st.write('Preview of the uploaded file')
 st.write(df.head(5))
 
+# st.write('Max month is..', max(df['Historical Date'].dt.month))
 
 
-df['Historical Date'] = pd.to_datetime(df['Historical Date'])
-# Display the first few rows of the dataset
 
-df = df[df['Historical Date'].dt.month<=5]
 
 
 
@@ -95,11 +223,12 @@ Do NOT write full date strings unless obvious — we will parse them using NLP l
 
 Time query: {query}
 """
+    st.write('I am in interpret_time_range_with_nlp function ')
     global df
     response = llm.invoke(prompt)
     response = response.content.strip()
     st.write(f'response is..{response}')
-
+    st.write('At start of nlp function, sum of Gap is...', st.session_state['df']['Gap'].sum())
     
     # Find all date-like expressions using NLP
     possible_dates = re.findall(r"\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t)?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:[\s\-]\d{4})?\b|\b\d{4}-\d{2}-\d{2}\b", response, re.IGNORECASE)
@@ -127,9 +256,11 @@ Time query: {query}
         else:
            df = df.copy(deep = True)
 
-        st.write(max(df['Historical Date']))
-        st.write(min(df['Historical Date']))
+        # st.write(max(df['Historical Date']))
+        # st.write(min(df['Historical Date']))
 
+    st.session_state['df'] = df.copy(deep = True)
+    # st.write('At end of nlp function, sum of Gap is...', st.session_state['df']['Gap'].sum())
     return start_date, end_date
 
 def extract_keywords(query):
@@ -149,7 +280,10 @@ column_hierarchy = [
     "OBI Group",
     "OBI Sub Group",
     "Secondary Sub-Group",
-    "Product Line Code"
+    "Product Line Code",
+    "Product Groups",
+    
+    "Product Models"
 ]
 
 cols_to_group = ''
@@ -226,8 +360,8 @@ def apply_filters(query):
             st.write('Applying filter of ', matching_col, 'in df')
             df = df[mask].copy(deep = True)
         
-        st.write(df.head())
-        st.write('flag_column is..', flag_column)
+        # st.write(df.head())
+        # st.write('flag_column is..', flag_column)
 
 
 def fun_cols_to_group():
@@ -272,7 +406,7 @@ def KFT_tool(query: str) -> str:
 
 
     """
-    Perform analysis on the `df` supplied and writes and executes Python code to give answers.
+    Perform analysis on the global dataframe `df` and writes and executes Python code to give answers.
 
     Args:
         query (str): The search query.
@@ -287,12 +421,13 @@ def KFT_tool(query: str) -> str:
     # st.write('I am going in cols_to_group..')
     fun_cols_to_group()
     st.write(f'Columns to group are {cols_to_group}')
+    st.write('New Sum is..', df['Gap'].sum())
     # st.write()
    
     # df = pd.read_csv(StringIO(df))
     
     prompt_template = """
-        You are an expert in writing Python code and executing it.
+        You are an expert in writing Python code and executing it. You have access to a global dataframe called 'df'
         
 
         ***IMPORTANT: Under no circumstance should the dataframe 'df' be filtered or subsetted.***
@@ -308,6 +443,8 @@ def KFT_tool(query: str) -> str:
         If the global list "{list_matching_cols}" has values, don't put any filter on the dataframe.
         **Absolutely do not filter the dataframe 'df' under any condition. Do not create any filtered version of df such as filtered_df. Always use 'df' as-is.**
 
+        ***Dont ever consider 'Plan_Data' for grouping for finding first level pareto***
+
         Don't give any description, just write relevant and correct and error-free Python code and store output in a variable called result.
         Ignore the case in 'df' and also ignore case in the question the user asks.
         Please generate a Python script using this 'df' as input dataframe and pandas to answer this question: "{question}".
@@ -318,6 +455,8 @@ def KFT_tool(query: str) -> str:
         **Do not include any descriptions, explanations, or comments.**
 
         STRICT REQUIREMENT:
+
+        0. Show value of df['Gap'].sum()
 
        1. **Always start afresh for the new user query. Just remember the dataframe df and do not remember anything from the past written code**
       Hierarchically group and filter the DataFrame using these columns.
@@ -331,10 +470,9 @@ def KFT_tool(query: str) -> str:
         2.**group the `Gap` column by elements of the `cols_to_group` on `Gap` one by one using a loop.
 
         
-         
+         Show the sum of 'Gap' for each 'cols_to_group' and also show the split of 'Gap' within each 'col_to_group'
 
-        
-        Sort elements in each group in descending order of `Gap`.
+                Sort elements in each group in descending order of `Gap`.
         if there is just one element in any grouped category, remove that grouped category from your consideration.
         Compute the sum of the top 3 elements within each grouped category and remove other elements from the grouped category
         ***Identify the group whose top 3 elements have maximum sum of 'Gap'. Plot the graph for that group first.
@@ -416,6 +554,11 @@ def KFT_tool(query: str) -> str:
         ***When drawing graphs using "Product Line Code" in x axis, ALWAYS show the exact "Product Line Code" in the x-axis.
         E.g if in x-axis, we have Product Line Code 62 and 111, show the x-axis with the labels of 62 and 111.***
         ***If plotting a bar chart or any graph with x-axis labels, DO NOT rotate the labels by 90 degrees.***
+        
+       
+
+        
+
         
        
 
@@ -550,13 +693,12 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
     tools = [KFT_tool]
 
     llm = AzureChatOpenAI(
-    api_key = "082d3990364b4fadbc133fa8935b7905",
-                        azure_endpoint = "https://becopenaidev7.openai.azure.com/",
-                        model = "gpt-4o",
-                        api_version="2024-02-01",
-                        temperature = 0.
-    # other params...
-)
+                                    api_key = "5rBPLfBwcuV3QIiQ3UK0mima2DOOxZiX5HfR4RIYCB7sOBH2EfEAJQQJ99BIACi0881XJ3w3AAABACOGiBE0",
+                                    azure_endpoint = "https://becopenaidev4.openai.azure.com/",
+                                    model = "gpt-4o",
+                                    api_version="2024-02-01",
+                                    temperature = 0.
+                                    )
 
 
     search_agent=initialize_agent(tools,llm,
