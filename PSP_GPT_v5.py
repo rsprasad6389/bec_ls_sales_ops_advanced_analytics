@@ -39,14 +39,23 @@ df = ''
 
 def snowpark_sso_connection():
     connection_parameters = {    
-        "ACCOUNT":  os.getenv("SNOWFLAKE_ACCOUNT"),
+        # "ACCOUNT":  os.getenv("SNOWFLAKE_ACCOUNT"),
 
-        "USER":os.getenv("SNOWFLAKE_USER"),
-        "PASSWORD" :os.getenv("SNOWFLAKE_PASSWORD"),
+        # "USER":os.getenv("SNOWFLAKE_USER"),
+        # "PASSWORD" :os.getenv("SNOWFLAKE_PASSWORD"),
+       
+        # "WAREHOUSE" : "BEC_LS_SALES_OPS_DWH",
+        # "DATABASE" :"BEC_LS_SALES_OPS_DWH_DEV",
+        # "SCHEMA" :"SFDC"
+        "ACCOUNT": "BECKMAN_COULTER_US_WEST",
+#         "USER": "rsprasad@beckman.com",
+        "USER":"BEC_LS_SALES_OPS_DWH_DEV",
+        "PASSWORD" : "BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24",
        
         "WAREHOUSE" : "BEC_LS_SALES_OPS_DWH",
         "DATABASE" :"BEC_LS_SALES_OPS_DWH_DEV",
         "SCHEMA" :"SFDC"
+        
         
         
     }
@@ -69,12 +78,19 @@ def connect_to_snowflake(account, user):
 cs = ''
 if 'cs' not in st.session_state:
      
-    user = os.getenv("SNOWFLAKE_USER")
-    account= os.getenv("SNOWFLAKE_ACCOUNT")
-    password = os.getenv("SNOWFLAKE_PASSWORD")
+    # user = os.getenv("SNOWFLAKE_USER")
+    # account= os.getenv("SNOWFLAKE_ACCOUNT")
+    # password = os.getenv("SNOWFLAKE_PASSWORD")
+    # warehouse = "BEC_LS_SALES_OPS_DWH"
+    # database ="BEC_LS_SALES_OPS_DWH_DEV"
+    # schema = "SFDC"
+    user = "BEC_LS_SALES_OPS_DWH_DEV"
+    account="BECKMAN_COULTER_US_WEST"
+    password ="BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24"
     warehouse = "BEC_LS_SALES_OPS_DWH"
     database ="BEC_LS_SALES_OPS_DWH_DEV"
     schema = "SFDC"
+                            
                             
                         
     cs = connect_to_snowflake(account, user)
@@ -727,6 +743,7 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
 
 
