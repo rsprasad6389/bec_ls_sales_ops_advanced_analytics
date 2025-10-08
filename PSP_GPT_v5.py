@@ -713,13 +713,13 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
     api_key = os.getenv("AZURE_CHATOPEN_API_NEW")
     azure_endpoint = os.getenv("AZURE_ENDPOINT")
 
-   llm = AzureChatOpenAI(
-                                    api_key = os.getenv("AZURE_OPENAI_API_KEY"),
-                                    azure_endpoint = os.getenv("AZURE_ENDPOINT"),
-                                    model = "gpt-4o",
-                                    api_version="2024-02-01",
-                                    temperature = 0.
-                                    )
+    llm = AzureChatOpenAI(
+                                api_key = os.getenv("AZURE_OPENAI_API_KEY"),
+                                azure_endpoint = os.getenv("AZURE_ENDPOINT"),
+                                model = "gpt-4o",
+                                api_version="2024-02-01",
+                                temperature = 0.
+                                )
 
     search_agent=initialize_agent(tools,llm,
                                   agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
@@ -742,6 +742,7 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
 
 
