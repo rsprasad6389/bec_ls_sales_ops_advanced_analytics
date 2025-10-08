@@ -39,10 +39,10 @@ df = ''
 
 def snowpark_sso_connection():
     connection_parameters = {    
-        "ACCOUNT": "BECKMAN_COULTER_US_WEST",
-#         "USER": "rsprasad@beckman.com",
-        "USER":"BEC_LS_SALES_OPS_DWH_DEV",
-        "PASSWORD" : "BEC_LS_SALES_OPS_DWH_DEVbeclssodwhdq#2y24",
+        "ACCOUNT":  os.getenv("SNOWFLAKE_ACCOUNT"),
+
+        "USER":os.getenv("SNOWFLAKE_USER"),
+        "PASSWORD" :os.getenv("SNOWFLAKE_PASSWORD"),
        
         "WAREHOUSE" : "BEC_LS_SALES_OPS_DWH",
         "DATABASE" :"BEC_LS_SALES_OPS_DWH_DEV",
@@ -727,6 +727,7 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
 
 
