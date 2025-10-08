@@ -10,4 +10,5 @@ pandas
 matplotlib
 snowflake-connector-python 
 snowflake-snowpark-python 
+dateparser
 
