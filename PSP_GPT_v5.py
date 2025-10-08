@@ -189,8 +189,8 @@ if 'df' not in st.session_state:
 # df = pd.read_excel('Gap4.xlsx')
 
     llm = AzureChatOpenAI(
-                                    api_key = api_key,
-                                    azure_endpoint = azure_endpoint,
+                                    api_key = os.getenv("AZURE_CHATOPEN_API_NEW"),
+                                    azure_endpoint = os.getenv("AZURE_ENDPOINT"),
                                     model = "gpt-4o",
                                     api_version="2024-02-01",
                                     temperature = 0.
@@ -743,6 +743,7 @@ if prompt:=st.chat_input(placeholder="What is machine learning?"):
         st.session_state.messages.append({'role':'assistant',"content":response})
         st.write(response)
         # st.write(matched_cols)
+
 
 
 
